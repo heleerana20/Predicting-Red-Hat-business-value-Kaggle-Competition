@@ -1,0 +1,70 @@
+---
+title: "Project (Naive bayes)"
+author: "Helee Rana"
+date: "4/29/2020"
+output:
+  word_document: default
+  html_document: default
+---
+
+```{r}
+require(tidyverse)
+```
+
+```{r}
+activity = read_csv("/Users/heleerana/Desktop/Kaggle Red Hat/predicting-red-hat-business-value/act_train.csv")
+people = read_csv("/Users/heleerana/Desktop/Kaggle Red Hat/predicting-red-hat-business-value/people.csv")
+test=read_csv("/Users/heleerana/Desktop/Kaggle Red Hat/predicting-red-hat-business-value/act_test.csv")
+```
+
+
+## Joining people and activity dataset
+```{r}
+maindata = activity %>% left_join(people , by =c('people_id'='people_id'))
+maindata%>% head(10)
+```
+
+## Data Preprocessing
+## Replacing NA values with -1
+```{r}
+maindata1 = maindata %>% replace(is.na(.), -1)
+maindata1 %>% head(10)
+```
+
+## Converting Boolean values to numeric that is 0s and 1s
+```{r}
+maindata2 = maindata1  %>% mutate_if(is.logical,as.numeric)
+maindata2%>%head(10)
+```
+
+## Joining test dataset with people dataset
+```{r}
+test = test %>% left_join(people , by = c('people_id' ='people_id'))
+```
+
+
+
+## Applying Naive Bayes Algorithm 
+
+```{r}
+require(e1071)
+model = naiveBayes(maindata2[,-15],as.factor(maindata2$outcome),laplace = 1)
+```
+
+
+```{r}
+predict = predict(model, newdata = test)
+```
+
+```{r}
+df<-data.frame(predict)
+df%>%head(10)
+```
+
+## Converting the output into a csv file
+```{r}
+output=as.data.frame(test$activity_id)
+output=output%>%mutate(activity_id=test$activity_id, outcome=predict)
+write.csv(output,file="KaggleSubmission13.csv",row.names=FALSE)
+```
+
